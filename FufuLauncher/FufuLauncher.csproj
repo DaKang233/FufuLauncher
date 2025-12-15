@@ -41,19 +41,19 @@
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="D:\Users\Administrator\RiderProjects\LauncherPro\LauncherPro\bin\Release\Launcher.dll">
+        <Content Include="..\FufuLauncher\Launcher.dll">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>Launcher.dll</Link>
         </Content>
-        <Content Include="C:\Users\Administrator\Desktop\CN\x64\Release\Genshin.UnlockerIsland.API.dll">
+        <Content Include="..\FufuLauncher\Genshin.UnlockerIsland.API.dll">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>Genshin.UnlockerIsland.API.dll</Link>
         </Content>
-        <Content Include="D:\Users\Administrator\RiderProjects\LauncherPro\LauncherPro\bin\Release\ControlPanel.exe">
+        <Content Include="..\FufuLauncher\ControlPanel.exe">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>ControlPanel.exe</Link>
         </Content>
-        <Content Include="C:\Users\Administrator\Desktop\CN\x64\Release\Genshin.UnlockerIsland.API.dll.bak">
+        <Content Include="..\FufuLauncher\Genshin.UnlockerIsland.API.dll.bak">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>Genshin.UnlockerIsland.API.dll.bak</Link>
         </Content>
@@ -67,7 +67,7 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-
+    
     <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
         <ProjectCapability Include="Msix" />
     </ItemGroup>
