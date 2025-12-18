@@ -27,15 +27,6 @@
                         </Grid.RowDefinitions>
                         
                         
-                        <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="4" Margin="0,0,0,12">
-                            <TextBlock Text="选择游戏路径崩溃的话一定不要用管理员模式来选择！" 
-                                       FontSize="13" FontWeight="SemiBold"
-                                       Foreground="Red" TextWrapping="Wrap"/>
-                            <TextBlock Text="选好了再用管理员运行！" 
-                                       FontSize="13" FontWeight="SemiBold"
-                                       Foreground="Red" TextWrapping="Wrap"/>
-                        </StackPanel>
-                        
                         <TextBlock Grid.Row="1" Text="游戏路径" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
                         
                         <Grid Grid.Row="2" Margin="0,0,0,12">

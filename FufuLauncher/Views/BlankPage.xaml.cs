@@ -141,65 +141,72 @@ namespace FufuLauncher.Views
             return null;
         }
 
-        private async Task LoadGameInfoAsync(string gamePath)
+private async Task LoadGameInfoAsync(string gamePath)
+{
+    gamePath = gamePath?.Trim('"').Trim();
+    
+    if (string.IsNullOrEmpty(gamePath) || !Directory.Exists(gamePath))
+    {
+        ShowEmptyState();
+        return;
+    }
+
+    LoadingRing.IsActive = true;
+    
+
+    try
+    {
+        var config = new GameConfigData { GamePath = gamePath };
+
+        _currentConfig = config;
+
+        ShowInfo();  
+
+        await Task.Run(async () =>
         {
-            gamePath = gamePath?.Trim('"').Trim();
-            
-            if (string.IsNullOrEmpty(gamePath) || !Directory.Exists(gamePath))
+            var configPath = Path.Combine(gamePath, "config.ini");
+            if (!File.Exists(configPath))
             {
-                ShowEmptyState();
-                return;
+                configPath = Directory.GetFiles(gamePath, "config.ini", SearchOption.AllDirectories)
+                    .FirstOrDefault();
             }
 
-            LoadingRing.IsActive = true;
-            InfoPanel.Visibility = Visibility.Collapsed;
-            EmptyPanel.Visibility = Visibility.Collapsed;
-
-            try
+            if (configPath != null && File.Exists(configPath))
             {
-                var config = new GameConfigData { GamePath = gamePath };
-                
-                var configPath = Path.Combine(gamePath, "config.ini");
-                if (!File.Exists(configPath))
+                var content = await File.ReadAllTextAsync(configPath);
+                var versionLine = content.Split('\n')
+                    .FirstOrDefault(line => line.StartsWith("game_version=", StringComparison.OrdinalIgnoreCase));
+                if (versionLine != null)
                 {
-                    configPath = Directory.GetFiles(gamePath, "config.ini", SearchOption.AllDirectories)
-                        .FirstOrDefault();
+                    var parts = versionLine.Split('=', 2);
+                    if (parts.Length > 1)
+                        config.Version = parts[1].Trim();
                 }
-
-                if (configPath != null && File.Exists(configPath))
-                {
-                    var content = await File.ReadAllTextAsync(configPath);
-                    var versionLine = content.Split('\n')
-                        .FirstOrDefault(line => line.StartsWith("game_version=", StringComparison.OrdinalIgnoreCase));
-                    if (versionLine != null)
-                    {
-                        var parts = versionLine.Split('=', 2);
-                        if (parts.Length > 1)
-                            config.Version = parts[1].Trim();
-                    }
-                    config.ServerType = DetectServerType(content);
-                }
-                else
-                {
-                    config.Version = "未找到版本信息";
-                    config.ServerType = "未知";
-                }
-
-                config.DirectorySize = CalculateDirectorySize(gamePath);
-                _currentConfig = config;
-                ShowInfo();
-                await GetGameBranchesInfoAsync();
+                config.ServerType = DetectServerType(content);
             }
-            catch (Exception ex)
+            else
             {
-                Debug.WriteLine($"[LoadGameInfoAsync] 异常: {ex.Message}");
-                ShowEmptyState();
+                config.Version = "未找到版本信息";
+                config.ServerType = "未知";
             }
-            finally
-            {
-                LoadingRing.IsActive = false;
-            }
-        }
+
+            config.DirectorySize = CalculateDirectorySize(gamePath);
+ 
+            DispatcherQueue.TryEnqueue(() => ShowInfo());
+        });
+
+        _ = GetGameBranchesInfoAsync();
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"[LoadGameInfoAsync] 异常: {ex.Message}");
+        ShowEmptyState();
+    }
+    finally
+    {
+        LoadingRing.IsActive = false;
+    }
+}
         
         private async Task GetGameBranchesInfoAsync()
         {
