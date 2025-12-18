@@ -5,8 +5,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Windows.Storage.Pickers;
 using Windows.System;
+using FufuLauncher.Activation;
 using FufuLauncher.Contracts.Services;
 using FufuLauncher.Services;
+using Microsoft.UI.Xaml.Controls;
 using WinRT.Interop;
 
 namespace FufuLauncher.ViewModels
@@ -103,23 +105,101 @@ namespace FufuLauncher.ViewModels
             Debug.WriteLine("[OtherViewModel] 开始录制连点键");
         }
 
-        private async Task BrowseProgramAsync()
+private async Task BrowseProgramAsync()
+{
+    try
+    {
+        if (!_dispatcherQueue.HasThreadAccess)
         {
-            try
-            {
-                var picker = new FileOpenPicker
-                {
-                    ViewMode = PickerViewMode.List,
-                    SuggestedStartLocation = PickerLocationId.Desktop,
-                    FileTypeFilter = { ".exe" }
-                };
-                InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
-                var file = await picker.PickSingleFileAsync();
-                if (file != null) AdditionalProgramPath = file.Path.Trim('"');
-            }
-            catch { }
+            Debug.WriteLine("[错误] BrowseProgramAsync 不在UI线程上执行");
+            return;
         }
 
+        var mainWindow = App.MainWindow;
+        if (mainWindow == null)
+        {
+            await ShowErrorAsync("无法获取主窗口句柄");
+            return;
+        }
+
+        var hwnd = WindowNative.GetWindowHandle(mainWindow);
+        if (hwnd == IntPtr.Zero)
+        {
+            StatusMessage = "错误：窗口句柄无效";
+            await ShowErrorAsync("窗口句柄无效，请以普通用户模式运行");
+            return;
+        }
+
+        var picker = new FileOpenPicker
+        {
+            ViewMode = PickerViewMode.List,
+            SuggestedStartLocation = PickerLocationId.Desktop,
+            FileTypeFilter = { ".exe" }
+        };
+        
+        try
+        {
+            InitializeWithWindow.Initialize(picker, hwnd);
+        }
+        catch (Exception initEx)
+        {
+            Debug.WriteLine($"[警告] InitializeWithWindow失败: {initEx.Message}");
+        }
+        
+        var file = await picker.PickSingleFileAsync();
+        
+        if (file != null)
+        {
+            var path = file.Path.Trim('"');
+            Debug.WriteLine($"[OtherViewModel] 用户选择程序: '{path}'");
+            
+            if (File.Exists(path))
+            {
+                AdditionalProgramPath = path;
+            }
+            else
+            {
+                await ShowErrorAsync("文件不存在或无法访问");
+            }
+        }
+        else
+        {
+            Debug.WriteLine("[OtherViewModel] 用户取消了文件选择");
+        }
+    }
+    catch (UnauthorizedAccessException)
+    {
+        await ShowErrorAsync("权限错误：请以普通用户身份运行程序选择文件");
+        Debug.WriteLine("[严重错误] 管理员模式权限问题");
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"选择程序失败: {ex.Message}\n堆栈: {ex.StackTrace}");
+        await ShowErrorAsync($"选择程序失败: {ex.Message}");
+    }
+}
+private async Task ShowErrorAsync(string message)
+{
+    try
+    {
+        await _dispatcherQueue.EnqueueAsync(async () =>
+        {
+            var dialog = new ContentDialog
+            {
+                Title = "操作失败",
+                Content = message,
+                CloseButtonText = "确定",
+                XamlRoot = App.MainWindow.Content.XamlRoot
+            };
+            await dialog.ShowAsync();
+        });
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"显示错误对话框失败: {ex.Message}");
+        StatusMessage = $"错误: {message}";
+    }
+}
         partial void OnIsAutoClickerEnabledChanged(bool value)
         {
             _autoClickerService.IsEnabled = value;
