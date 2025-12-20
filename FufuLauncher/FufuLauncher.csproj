@@ -57,7 +57,7 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>Genshin.UnlockerIsland.API.dll.bak</Link>
         </Content>
-        <Content Include="..\x64\Release\nvhelper.dll">
+        <Content Include="..\FufuLauncher\nvhelper.dll">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>nvhelper.dll</Link>
         </Content>
