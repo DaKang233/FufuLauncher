@@ -120,6 +120,7 @@ namespace FufuLauncher.ViewModels
         {
             try
             {
+
                 var savedPath = await _localSettingsService.ReadSettingAsync(GamePathKey) as string;
                 if (!string.IsNullOrEmpty(savedPath))
                 {
@@ -226,7 +227,6 @@ namespace FufuLauncher.ViewModels
                 await ShowError($"选择路径失败: {ex.Message}");
             }
         }
-
         private async Task ShowError(string message)
         {
             try
@@ -248,7 +248,6 @@ namespace FufuLauncher.ViewModels
                 Debug.WriteLine($"显示错误对话框失败: {ex.Message}");
             }
         }
-
         private async Task LoadGameInfoAsync(string path)
         {
             if (string.IsNullOrEmpty(path)) return;

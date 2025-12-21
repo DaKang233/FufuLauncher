@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.Messaging;
@@ -39,10 +38,6 @@ namespace FufuLauncher.Views
 {
     public sealed partial class BlankPage : Page
     {
-        // HdrControl.dll导入声明
-        [DllImport("HdrControl.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-        private static extern int SetGameHdrRegistryState(string regSubPath, bool enable);
-
         private GameConfigData? _currentConfig;
         private readonly string _accountsFilePath;
         private readonly ILocalSettingsService _localSettingsService;
@@ -122,10 +117,12 @@ namespace FufuLauncher.Views
             }
         }
 
+
         private async void BlankPage_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
+
                 if (await _localSettingsService.ReadSettingAsync("GameInstallationPath") is string savedPath)
                 {
                     savedPath = savedPath.Trim('"').Trim();
@@ -134,6 +131,7 @@ namespace FufuLauncher.Views
                 }
                 else
                 {
+
                     var foundPath = GamePathFinder.FindGamePath();
                     if (!string.IsNullOrEmpty(foundPath))
                     {
@@ -220,10 +218,13 @@ namespace FufuLauncher.Views
 
             LoadingRing.IsActive = true;
 
+
             try
             {
                 var config = new GameConfigData { GamePath = gamePath };
+
                 _currentConfig = config;
+
                 ShowInfo();
 
                 await Task.Run(async () =>
@@ -285,6 +286,7 @@ namespace FufuLauncher.Views
                 var root = json.RootElement;
                 if (root.GetProperty("retcode").GetInt32() == 0)
                 {
+
                     var gameBranch = root.GetProperty("data").GetProperty("game_branches")[0];
 
                     var mainInfo = gameBranch.GetProperty("main");
@@ -519,36 +521,6 @@ namespace FufuLauncher.Views
             catch (Exception ex)
             {
                 await ShowError($"删除失败: {ex.Message}");
-            }
-        }
-
-        private async void HDRToggle_Toggled(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var isEnabled = (sender as ToggleSwitch)?.IsOn ?? false;
-                string regPath = @"Software\miHoYo\原神";
-
-                // 调用HdrControl.dll设置HDR状态
-                int result = SetGameHdrRegistryState(regPath, isEnabled);
-
-                if (result != 0)
-                {
-                    Debug.WriteLine($"[HDRToggle_Toggled] HDR设置失败，错误码: {result}");
-                    // 恢复开关状态
-                    HDRToggle.IsOn = !HDRToggle.IsOn;
-                    await ShowError($"HDR设置失败，错误码: {result}");
-                }
-                else
-                {
-                    Debug.WriteLine($"[HDRToggle_Toggled] HDR已设置为: {isEnabled}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[HDRToggle_Toggled] 设置失败: {ex.Message}");
-                HDRToggle.IsOn = !HDRToggle.IsOn;
-                await ShowError($"HDR设置失败: {ex.Message}");
             }
         }
 

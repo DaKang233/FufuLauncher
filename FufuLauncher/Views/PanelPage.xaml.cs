@@ -12,32 +12,25 @@ public sealed partial class PanelPage : Page
     {
         get;
     }
-    private bool _isOnMainPage = true;
 
     public PanelPage()
     {
         ViewModel = App.GetService<ControlPanelModel>();
         DataContext = ViewModel;
         InitializeComponent();
-
-        SecondaryScrollViewer.IsHitTestVisible = false;
-        SecondaryScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
     }
 
-    private void MainScrollViewer_Tapped(object sender, TappedRoutedEventArgs e)
+    private void ContentScrollViewer_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        // Move focus to the ScrollViewer to dismiss NumberBox input focus
-        MainScrollViewer.Focus(FocusState.Programmatic);
+        ContentScrollViewer.Focus(FocusState.Programmatic);
     }
 
     private void NumberBox_GotFocus(object sender, RoutedEventArgs e)
     {
-        // Optional: handle when numberbox gets focus
     }
 
     private void NumberBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        // Optional: handle when numberbox loses focus
     }
 
     private void LaunchControlPanelButton_Click(object sender, RoutedEventArgs e)
@@ -78,27 +71,24 @@ public sealed partial class PanelPage : Page
         await dialog.ShowAsync();
     }
 
-    private void NavigateButton_Click(object sender, RoutedEventArgs e)
+    private void NavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (_isOnMainPage)
+        if (args.SelectedItem is NavigationViewItem selectedItem)
         {
-            SlideToSecondaryPage.Begin();
-            NavigateButton.Content = "返回";
-            _isOnMainPage = false;
-            MainScrollViewer.IsHitTestVisible = false;
-            MainScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-            SecondaryScrollViewer.IsHitTestVisible = true;
-            SecondaryScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-        }
-        else
-        {
-            SlideToMainPage.Begin();
-            NavigateButton.Content = "高级功能";
-            _isOnMainPage = true;
-            MainScrollViewer.IsHitTestVisible = true;
-            MainScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            SecondaryScrollViewer.IsHitTestVisible = false;
-            SecondaryScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            string tag = selectedItem.Tag?.ToString();
+
+            switch (tag)
+            {
+                case "BasicSettings":
+                    BasicSettingsPage.Visibility = Visibility.Visible;
+                    AdvancedSettingsPage.Visibility = Visibility.Collapsed;
+                    break;
+
+                case "AdvancedSettings":
+                    BasicSettingsPage.Visibility = Visibility.Collapsed;
+                    AdvancedSettingsPage.Visibility = Visibility.Visible;
+                    break;
+            }
         }
     }
 }

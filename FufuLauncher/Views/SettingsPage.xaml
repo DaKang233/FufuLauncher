@@ -38,23 +38,75 @@
         </ResourceDictionary>
     </Page.Resources>
 
-    <Grid Margin="32,32,32,0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        
-        <TextBlock Text="设置"
-                   Style="{ThemeResource TitleTextBlockStyle}"
-                   Grid.Row="0"
-                   Margin="0,0,0,24"/>
-        
-        <ScrollViewer Grid.Row="1" 
-                      Padding="0,0,12,24"
-                      VerticalScrollBarVisibility="Auto">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <NavigationView x:Name="SettingsNavigationView"
+                        Grid.Column="0"
+                        PaneDisplayMode="Left"
+                        IsSettingsVisible="False"
+                        IsBackButtonVisible="Collapsed"
+                        IsPaneToggleButtonVisible="False"
+                        IsPaneOpen="True"
+                        SelectionChanged="SettingsNavigationView_SelectionChanged"
+                        Margin="0,0,0,0"
+                        Width="220"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="外观与个性化" Tag="AppearanceItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE771;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="语言与区域" Tag="LanguageItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF2B7;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="游戏启动配置" Tag="LaunchConfigItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7FC;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="背景与视觉效果" Tag="BackgroundItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE771;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="窗口效果" Tag="WindowEffectsItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8B3;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="启动音效" Tag="StartupSoundItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8D6;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="高级选项" Tag="AdvancedOptionsItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="关于" Tag="AboutItem">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE897;" FontFamily="Segoe MDL2 Assets"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+        </NavigationView>
+
+        <ScrollViewer x:Name="SettingsScrollViewer"
+                      Grid.Column="1"
+                      Padding="32,32,12,24"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollMode="Disabled">
             <StackPanel Spacing="0">
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="AppearanceItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="外观与个性化" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -100,7 +152,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="LanguageItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="语言与区域" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -131,7 +183,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="LaunchConfigItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="游戏启动配置" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -240,7 +292,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="BackgroundItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="背景与视觉效果" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -313,7 +365,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="WindowEffectsItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="窗口效果" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -332,7 +384,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="StartupSoundItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="启动音效" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -377,7 +429,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="AdvancedOptionsItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="高级选项" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -416,7 +468,7 @@
                     </StackPanel>
                 </Border>
                 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border x:Name="AboutItem" Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <TextBlock Text="关于" 
                                    Style="{ThemeResource SubtitleTextBlockStyle}"

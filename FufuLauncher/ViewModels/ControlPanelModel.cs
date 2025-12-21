@@ -33,7 +33,7 @@ public partial class ControlPanelModel : ObservableObject
     private bool _isGameRunning;
 
     [ObservableProperty]
-    private string _connectionStatus = "等待连接...";
+    private string _connectionStatus = "请启动游戏";
 
     public ControlPanelModel()
     {
@@ -58,6 +58,7 @@ public partial class ControlPanelModel : ObservableObject
         _ = StartGameMonitoringLoopAsync(_cancellationTokenSource.Token);
     }
 
+    // ========== UDP功能（保持原始逻辑） ==========
     [ObservableProperty]
     private bool _enableFpsOverride;
 
@@ -94,6 +95,7 @@ public partial class ControlPanelModel : ObservableObject
         SaveConfig();
     }
 
+    // **关键点：雾效属性名保持EnableFogOverride，XAML绑定这个**
     [ObservableProperty]
     private bool _enableFogOverride;
 
@@ -112,24 +114,25 @@ public partial class ControlPanelModel : ObservableObject
         SaveConfig();
     }
 
+    // ========== DLL功能（UI显示"禁用/移除"，True=执行操作） ==========
     [ObservableProperty]
-    private bool _enableQuestBannerControl = true;
+    private bool _removeQuestBanner = true;  // 移除任务横幅
 
-    partial void OnEnableQuestBannerControlChanged(bool value)
+    partial void OnRemoveQuestBannerChanged(bool value)
     {
         SaveConfig();
     }
 
     [ObservableProperty]
-    private bool _enableDamageTextControl = true;
+    private bool _removeDamageText = true;  // 移除伤害文本
 
-    partial void OnEnableDamageTextControlChanged(bool value)
+    partial void OnRemoveDamageTextChanged(bool value)
     {
         SaveConfig();
     }
 
     [ObservableProperty]
-    private bool _enableTouchScreenMode;
+    private bool _enableTouchScreenMode;  // 触屏模式
 
     partial void OnEnableTouchScreenModeChanged(bool value)
     {
@@ -137,29 +140,30 @@ public partial class ControlPanelModel : ObservableObject
     }
 
     [ObservableProperty]
-    private bool _enableEventCameraMove = true;
+    private bool _disableEventCameraMove = true;  // 禁用事件镜头移动
 
-    partial void OnEnableEventCameraMoveChanged(bool value)
+    partial void OnDisableEventCameraMoveChanged(bool value)
     {
         SaveConfig();
     }
 
     [ObservableProperty]
-    private bool _enableTeamProgress = true;
+    private bool _removeTeamProgressLimit = true;  // 移除组队进度限制
 
-    partial void OnEnableTeamProgressChanged(bool value)
+    partial void OnRemoveTeamProgressLimitChanged(bool value)
     {
         SaveConfig();
     }
 
     [ObservableProperty]
-    private bool _enableRedirectCombineEntry;
+    private bool _enableRedirectCombineEntry;  // 重定向合成入口
 
     partial void OnEnableRedirectCombineEntryChanged(bool value)
     {
         SaveConfig();
     }
 
+    // 树脂控制
     [ObservableProperty]
     private bool _resinListItemId000106Allowed;
 
@@ -300,7 +304,7 @@ public partial class ControlPanelModel : ObservableObject
                     {
                         App.MainWindow.DispatcherQueue.TryEnqueue(() =>
                        {
-                           ConnectionStatus = "等待连接...";
+                           ConnectionStatus = "请启动游戏";
                        });
                     }
                 }
@@ -436,13 +440,13 @@ public partial class ControlPanelModel : ObservableObject
                     TargetFps = config.TargetFps;
                     EnableFovOverride = config.EnableFovOverride;
                     TargetFov = config.TargetFov;
-                    EnableFogOverride = config.EnableFogOverride;
+                    EnableFogOverride = config.EnableFogOverride;  // 雾效属性
                     EnablePerspectiveOverride = config.EnablePerspectiveOverride;
-                    EnableQuestBannerControl = config.EnableQuestBannerControl;
-                    EnableDamageTextControl = config.EnableDamageTextControl;
+                    RemoveQuestBanner = config.RemoveQuestBanner;
+                    RemoveDamageText = config.RemoveDamageText;
                     EnableTouchScreenMode = config.EnableTouchScreenMode;
-                    EnableEventCameraMove = config.EnableEventCameraMove;
-                    EnableTeamProgress = config.EnableTeamProgress;
+                    DisableEventCameraMove = config.DisableEventCameraMove;
+                    RemoveTeamProgressLimit = config.RemoveTeamProgressLimit;
                     EnableRedirectCombineEntry = config.EnableRedirectCombineEntry;
                     ResinListItemId000106Allowed = config.ResinListItemId000106Allowed;
                     ResinListItemId000201Allowed = config.ResinListItemId000201Allowed;
@@ -490,13 +494,13 @@ public partial class ControlPanelModel : ObservableObject
                 TargetFps = TargetFps,
                 EnableFovOverride = EnableFovOverride,
                 TargetFov = TargetFov,
-                EnableFogOverride = EnableFogOverride,
+                EnableFogOverride = EnableFogOverride,  // 雾效属性
                 EnablePerspectiveOverride = EnablePerspectiveOverride,
-                EnableQuestBannerControl = EnableQuestBannerControl,
-                EnableDamageTextControl = EnableDamageTextControl,
+                RemoveQuestBanner = RemoveQuestBanner,
+                RemoveDamageText = RemoveDamageText,
                 EnableTouchScreenMode = EnableTouchScreenMode,
-                EnableEventCameraMove = EnableEventCameraMove,
-                EnableTeamProgress = EnableTeamProgress,
+                DisableEventCameraMove = DisableEventCameraMove,
+                RemoveTeamProgressLimit = RemoveTeamProgressLimit,
                 EnableRedirectCombineEntry = EnableRedirectCombineEntry,
                 ResinListItemId000106Allowed = ResinListItemId000106Allowed,
                 ResinListItemId000201Allowed = ResinListItemId000201Allowed,
@@ -542,21 +546,19 @@ public class ControlPanelConfig
     public bool EnableFogOverride
     {
         get; set;
-    }
+    }  // 雾效属性
     public bool EnablePerspectiveOverride
     {
         get; set;
     }
-
-    public bool EnableQuestBannerControl { get; set; } = true;
-    public bool EnableDamageTextControl { get; set; } = true;
+    public bool RemoveQuestBanner { get; set; } = true;
+    public bool RemoveDamageText { get; set; } = true;
     public bool EnableTouchScreenMode
     {
         get; set;
     }
-
-    public bool EnableEventCameraMove { get; set; } = true;
-    public bool EnableTeamProgress { get; set; } = true;
+    public bool DisableEventCameraMove { get; set; } = true;
+    public bool RemoveTeamProgressLimit { get; set; } = true;
     public bool EnableRedirectCombineEntry
     {
         get; set;
@@ -581,7 +583,6 @@ public class ControlPanelConfig
     {
         get; set;
     }
-
     public Dictionary<string, long> GamePlayTimeData
     {
         get; set;

@@ -151,7 +151,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     
@@ -170,22 +169,10 @@
                     </Grid>
 
                     
-                    <Grid Grid.Row="1" Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <TextBlock Grid.Column="0" Text="HDR模式" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="启用HDR支持" Opacity="0.7" VerticalAlignment="Center" Margin="12,0,0,0"/>
-                        <ToggleSwitch Grid.Column="2" x:Name="HDRToggle" Toggled="HDRToggle_Toggled"/>
-                    </Grid>
-                    
-                    <Rectangle Grid.Row="2" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8"/>
+                    <Rectangle Grid.Row="1" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8"/>
 
                     
-                    <ScrollViewer Grid.Row="3" MaxHeight="200" Margin="0,8,0,0">
+                    <ScrollViewer Grid.Row="2" MaxHeight="200" Margin="0,8,0,0">
                         <ListView x:Name="AccountsListView" SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate>

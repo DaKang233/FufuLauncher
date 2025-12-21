@@ -10,311 +10,281 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:ControlPanelModel}"
     mc:Ignorable="d"
     Background="Transparent">
-    
+
     <Page.Resources>
         <converters:EmptyCountToVisibilityConverter x:Key="EmptyCountToVisibilityConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        
-        <Storyboard x:Name="SlideToSecondaryPage">
-            <DoubleAnimation Storyboard.TargetName="MainContentTranslate"
-                           Storyboard.TargetProperty="X"
-                           From="0" To="-800"
-                           Duration="0:0:0.3">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="SecondaryContentTranslate"
-                           Storyboard.TargetProperty="X"
-                           From="800" To="0"
-                           Duration="0:0:0.3">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-        
-        <Storyboard x:Name="SlideToMainPage">
-            <DoubleAnimation Storyboard.TargetName="MainContentTranslate"
-                           Storyboard.TargetProperty="X"
-                           From="-800" To="0"
-                           Duration="0:0:0.3">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="SecondaryContentTranslate"
-                           Storyboard.TargetProperty="X"
-                           From="0" To="800"
-                           Duration="0:0:0.3">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
     </Page.Resources>
 
-    <Grid Padding="20">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="350"/>
-        </Grid.ColumnDefinitions>
-        
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+    <Grid>
+        <NavigationView x:Name="MainNavigationView"
+                        IsBackButtonVisible="Collapsed"
+                        PaneDisplayMode="LeftMinimal"
+                        IsPaneToggleButtonVisible="True"
+                        IsSettingsVisible="False"
+                        SelectionChanged="NavigationView_SelectionChanged"
+                        Margin="0,40,0,0">
             
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,15">
-                <Button x:Name="NavigateButton" 
-                        Content="高级设置" 
-                        Click="NavigateButton_Click"
-                        HorizontalAlignment="Left"
-                        Width="200"
-                        Style="{StaticResource AccentButtonStyle}"/>
-                <TextBlock Text="{Binding ConnectionStatus}" 
-                           FontSize="14" 
-                           VerticalAlignment="Center"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            </StackPanel>
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="基础设置" Tag="BasicSettings" IsSelected="True">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE115;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                
+                <NavigationViewItem Content="高级设置" Tag="AdvancedSettings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE114;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
             
-            <Grid Grid.Row="1">
-                <Grid.Clip>
-                    <RectangleGeometry Rect="0,0,800,1000"/>
-                </Grid.Clip>
+            <ScrollViewer x:Name="ContentScrollViewer" 
+                          VerticalScrollBarVisibility="Auto"
+                          Tapped="ContentScrollViewer_Tapped">
                 
-                <ScrollViewer x:Name="MainScrollViewer"
-                              Tapped="MainScrollViewer_Tapped"
-                              VerticalScrollBarVisibility="Auto">
-                    <ScrollViewer.RenderTransform>
-                        <TranslateTransform x:Name="MainContentTranslate" X="0"/>
-                    </ScrollViewer.RenderTransform>
+                <Grid Padding="20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="350"/>
+                    </Grid.ColumnDefinitions>
                     
-                    <StackPanel Spacing="20" Width="780">
-                        <TextBlock Text="游戏控制面板" 
-                                   FontSize="24" 
-                                   FontWeight="Bold" 
-                                   Margin="0,0,0,10"/>
-
-                        <Button Content="启动独立控制面板" 
-                                Click="LaunchControlPanelButton_Click"
-                                HorizontalAlignment="Left"
-                                Width="200"
-                                Margin="0,0,0,10"/>
-                        
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <TextBlock Grid.Row="0" Text="FPS 设置" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="20">
-                                <ToggleSwitch Header="启用 FPS 覆盖" IsOn="{Binding EnableFpsOverride, Mode=TwoWay}" />
-                                <StackPanel Orientation="Vertical" Spacing="5" Width="300">
-                                    <Slider Header="目标 FPS" Value="{Binding TargetFps, Mode=TwoWay}" Minimum="30" Maximum="1000" StepFrequency="10" />
-                                    <NumberBox x:Name="FpsNumberBox" Value="{Binding TargetFps, Mode=TwoWay}" Minimum="30" Maximum="1000" SpinButtonPlacementMode="Hidden" Width="100" HorizontalAlignment="Left" GotFocus="NumberBox_GotFocus" LostFocus="NumberBox_LostFocus" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Grid>
-                        
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="FOV 设置" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="20">
-                                <ToggleSwitch Header="启用 FOV 覆盖" IsOn="{Binding EnableFovOverride, Mode=TwoWay}" />
-                                <StackPanel Orientation="Vertical" Spacing="5" Width="300">
-                                    <Slider Header="目标 FOV" Value="{Binding TargetFov, Mode=TwoWay}" Minimum="30" Maximum="120" StepFrequency="1" />
-                                    <NumberBox x:Name="FovNumberBox" Value="{Binding TargetFov, Mode=TwoWay}" Minimum="30" Maximum="120" SpinButtonPlacementMode="Hidden" Width="100" HorizontalAlignment="Left" GotFocus="NumberBox_GotFocus" LostFocus="NumberBox_LostFocus" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Grid>
-                        
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="基础游戏功能" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-                                    <ToggleSwitch Header="显示任务横幅" IsOn="{Binding EnableQuestBannerControl, Mode=TwoWay}" />
-                                    <ToggleSwitch Header="显示伤害文本" IsOn="{Binding EnableDamageTextControl, Mode=TwoWay}" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="1" Header="触屏操作模式" IsOn="{Binding EnableTouchScreenMode, Mode=TwoWay}" HorizontalAlignment="Left" Margin="0,0,0,0" />
-                            </Grid>
-                        </Grid>
-                    </StackPanel>
-                </ScrollViewer>
-                
-                <ScrollViewer x:Name="SecondaryScrollViewer"
-                              VerticalScrollBarVisibility="Disabled"
-                              IsHitTestVisible="False">
-                    <ScrollViewer.RenderTransform>
-                        <TranslateTransform x:Name="SecondaryContentTranslate" X="800"/>
-                    </ScrollViewer.RenderTransform>
-                    
-                    <StackPanel Spacing="20" Width="780">
-                        <TextBlock Text="高级设置" 
-                                   FontSize="24" 
-                                   FontWeight="Bold" 
-                                   Margin="0,0,0,10"/>
-                        
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="画面效果" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <ToggleSwitch Grid.Column="0" Header="启用雾效覆盖" IsOn="{Binding EnableFogOverride, Mode=TwoWay}" />
-                                <ToggleSwitch Grid.Column="1" Header="启用视角覆盖" IsOn="{Binding EnablePerspectiveOverride, Mode=TwoWay}" />
-                            </Grid>
-                        </Grid>
-                        
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="高级功能控制" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <ToggleSwitch Grid.Column="0" Header="启用事件镜头移动" IsOn="{Binding EnableEventCameraMove, Mode=TwoWay}" />
-                                <ToggleSwitch Grid.Column="1" Header="启用组队进度限制" IsOn="{Binding EnableTeamProgress, Mode=TwoWay}" />
-                                <ToggleSwitch Grid.Column="2" Header="重定向合成入口" IsOn="{Binding EnableRedirectCombineEntry, Mode=TwoWay}" />
-                            </Grid>
-                        </Grid>
-                        
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="树脂物品控制" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-                                    <ToggleSwitch Header="原粹树脂" IsOn="{Binding ResinListItemId000106Allowed, Mode=TwoWay}" />
-                                    <ToggleSwitch Header="原石" IsOn="{Binding ResinListItemId000201Allowed, Mode=TwoWay}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="20">
-                                    <ToggleSwitch Header="脆弱树脂" IsOn="{Binding ResinListItemId107009Allowed, Mode=TwoWay}" />
-                                    <ToggleSwitch Header="须臾树脂" IsOn="{Binding ResinListItemId107012Allowed, Mode=TwoWay}" />
-                                </StackPanel>
-                                <ToggleSwitch Grid.Column="2" Header="浓缩树脂" IsOn="{Binding ResinListItemId220007Allowed, Mode=TwoWay}" />
-                            </Grid>
-                        </Grid>
-                    </StackPanel>
-                </ScrollViewer>
-            </Grid>
-        </Grid>
-        
-        <Border Grid.Column="1" 
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Margin="20,0,0,0"
-                Padding="20">
-            <ScrollViewer>
-                <StackPanel Spacing="15">
-                    <TextBlock Text="本周游戏时长统计" 
-                               FontSize="18" 
-                               FontWeight="Bold"
-                               Margin="0,0,0,5"/>
-                    
-                    <Grid>
+                    <Grid Grid.Column="0" x:Name="MainContentArea">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
                         
-                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
-                            <TextBlock Text="总时长" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding WeeklyStats.DisplayTotalTime}" FontSize="18" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        
-                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5">
-                            <TextBlock Text="平均每日" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding WeeklyStats.DisplayAverageTime}" FontSize="18" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        
-                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="5" Margin="0,15,0,0">
-                            <TextBlock Text="游戏状态" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            
-                            <Grid>
-                                <TextBlock Text="未运行" FontSize="16" FontWeight="SemiBold" 
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           Visibility="{Binding IsGameRunning, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=True}"/>
-                                <TextBlock Text="运行中" FontSize="16" FontWeight="SemiBold" 
-                                           Foreground="#10B981"
-                                           Visibility="{Binding IsGameRunning, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Grid Grid.Row="1" x:Name="PageContentContainer">
+                            <Grid x:Name="BasicSettingsPage" Visibility="Visible">
+                                <StackPanel Spacing="20">
+                                    <TextBlock Text="游戏控制面板" 
+                                               FontSize="24" 
+                                               FontWeight="Bold" 
+                                               Margin="40,0,0,10"/>
+                                    
+                                    <Button Content="启动独立控制面板" 
+                                            Click="LaunchControlPanelButton_Click"
+                                            HorizontalAlignment="Left"
+                                            Width="200"
+                                            Margin="0,0,0,10"/>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Row="0" Text="FPS 设置" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="20">
+                                            <ToggleSwitch Header="启用 FPS 突破" IsOn="{Binding EnableFpsOverride, Mode=TwoWay}" />
+                                            <StackPanel Orientation="Vertical" Spacing="5" Width="300">
+                                                <Slider Header="目标 FPS" Value="{Binding TargetFps, Mode=TwoWay}" Minimum="30" Maximum="1000" StepFrequency="10" />
+                                                <NumberBox x:Name="FpsNumberBox" Value="{Binding TargetFps, Mode=TwoWay}" Minimum="30" Maximum="1000" SpinButtonPlacementMode="Hidden" Width="100" HorizontalAlignment="Left" GotFocus="NumberBox_GotFocus" LostFocus="NumberBox_LostFocus" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="FOV 设置" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="20">
+                                            <ToggleSwitch Header="启用 FOV 修改" IsOn="{Binding EnableFovOverride, Mode=TwoWay}" />
+                                            <StackPanel Orientation="Vertical" Spacing="5" Width="300">
+                                                <Slider Header="目标 FOV" Value="{Binding TargetFov, Mode=TwoWay}" Minimum="30" Maximum="120" StepFrequency="1" />
+                                                <NumberBox x:Name="FovNumberBox" Value="{Binding TargetFov, Mode=TwoWay}" Minimum="30" Maximum="120" SpinButtonPlacementMode="Hidden" Width="100" HorizontalAlignment="Left" GotFocus="NumberBox_GotFocus" LostFocus="NumberBox_LostFocus" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="基础游戏功能" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                                                <ToggleSwitch Header="移除任务横幅" IsOn="{Binding RemoveQuestBanner, Mode=TwoWay}" />
+                                                <ToggleSwitch Header="移除伤害文本" IsOn="{Binding RemoveDamageText, Mode=TwoWay}" />
+                                            </StackPanel>
+                                            <ToggleSwitch Grid.Column="1" Header="触屏操作模式" IsOn="{Binding EnableTouchScreenMode, Mode=TwoWay}" HorizontalAlignment="Left" Margin="0,0,0,0" />
+                                        </Grid>
+                                    </Grid>
+                                </StackPanel>
                             </Grid>
-                        </StackPanel>
+                            
+                            <Grid x:Name="AdvancedSettingsPage" Visibility="Collapsed">
+                                <StackPanel Spacing="20">
+                                    <TextBlock Text="高级设置" 
+                                               FontSize="24" 
+                                               FontWeight="Bold" 
+                                               Margin="40,0,0,10"/>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="画面效果" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ToggleSwitch Header="启用雾效去除" IsOn="{Binding EnableFogOverride, Mode=TwoWay}" />
+                                            <ToggleSwitch Grid.Column="1" Header="启用反虚化" IsOn="{Binding EnablePerspectiveOverride, Mode=TwoWay}" />
+                                        </Grid>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="高级功能控制" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ToggleSwitch Grid.Column="0" Header="禁用大招动画" IsOn="{Binding DisableEventCameraMove, Mode=TwoWay}" />
+                                            <ToggleSwitch Grid.Column="1" Header="移除配队条" IsOn="{Binding RemoveTeamProgressLimit, Mode=TwoWay}" />
+                                            <ToggleSwitch Grid.Column="2" Header="重定向合成入口" IsOn="{Binding EnableRedirectCombineEntry, Mode=TwoWay}" />
+                                        </Grid>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="树脂物品控制" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                                                <ToggleSwitch Header="原粹树脂" IsOn="{Binding ResinListItemId000106Allowed, Mode=TwoWay}" />
+                                                <ToggleSwitch Header="原石" IsOn="{Binding ResinListItemId000201Allowed, Mode=TwoWay}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="20">
+                                                <ToggleSwitch Header="脆弱树脂" IsOn="{Binding ResinListItemId107009Allowed, Mode=TwoWay}" />
+                                                <ToggleSwitch Header="须臾树脂" IsOn="{Binding ResinListItemId107012Allowed, Mode=TwoWay}" />
+                                            </StackPanel>
+                                            <ToggleSwitch Grid.Column="2" Header="浓缩树脂" IsOn="{Binding ResinListItemId220007Allowed, Mode=TwoWay}" />
+                                        </Grid>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
                     </Grid>
                     
-                    <Rectangle Height="1" 
-                               Fill="{ThemeResource CardStrokeColorDefaultBrush}" 
-                               Margin="0,5"/>
-                    
-                    <TextBlock Text="每日详情" FontWeight="SemiBold" FontSize="14" Margin="0,5,0,0"/>
-                    <ItemsControl ItemsSource="{Binding WeeklyStats.DailyRecords}" Margin="0,5,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:GamePlayTimeRecord">
-                                <Grid Margin="0,6">
+                    <Border Grid.Column="1" 
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Margin="20,0,0,0"
+                            Padding="20">
+                        <ScrollViewer>
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="本周游戏时长统计" 
+                                           FontSize="18" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,5"/>
+                                
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                                        <TextBlock Text="{Binding DayOfWeek}" FontSize="14" Width="40"/>
-                                        <TextBlock Text="{Binding DisplayDate}" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
+                                        <TextBlock Text="总时长" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding WeeklyStats.DisplayTotalTime}" FontSize="18" FontWeight="SemiBold"/>
                                     </StackPanel>
                                     
-                                    <TextBlock Grid.Column="1" Text="{Binding DisplayTime}" FontSize="14" FontWeight="SemiBold"/>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5">
+                                        <TextBlock Text="平均每日" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding WeeklyStats.DisplayAverageTime}" FontSize="18" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Spacing="5" Margin="0,15,0,0">
+                                        <TextBlock Text="游戏状态" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        
+                                        <Grid>
+                                            <TextBlock Text="未运行" FontSize="16" FontWeight="SemiBold" 
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Visibility="{Binding IsGameRunning, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=True}"/>
+                                            <TextBlock Text="运行中" FontSize="16" FontWeight="SemiBold" 
+                                                       Foreground="#10B981"
+                                                       Visibility="{Binding IsGameRunning, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                        </Grid>
+                                    </StackPanel>
                                 </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    
-                    <TextBlock Text="本周暂无游戏记录" 
-                               FontSize="14" 
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               HorizontalAlignment="Center"
-                               Margin="0,20"
-                               Visibility="{Binding WeeklyStats.DailyRecords.Count, Converter={StaticResource EmptyCountToVisibilityConverter}}"/>
-                </StackPanel>
+                                
+                                <Rectangle Height="1" 
+                                           Fill="{ThemeResource CardStrokeColorDefaultBrush}" 
+                                           Margin="0,5"/>
+                                
+                                <TextBlock Text="每日详情" FontWeight="SemiBold" FontSize="14" Margin="0,5,0,0"/>
+                                <ItemsControl ItemsSource="{Binding WeeklyStats.DailyRecords}" Margin="0,5,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:GamePlayTimeRecord">
+                                            <Grid Margin="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                                    <TextBlock Text="{Binding DayOfWeek}" FontSize="14" Width="40"/>
+                                                    <TextBlock Text="{Binding DisplayDate}" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                </StackPanel>
+                                                
+                                                <TextBlock Grid.Column="1" Text="{Binding DisplayTime}" FontSize="14" FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                
+                                <TextBlock Text="本周暂无游戏记录" 
+                                           FontSize="14" 
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,20"
+                                           Visibility="{Binding WeeklyStats.DailyRecords.Count, Converter={StaticResource EmptyCountToVisibilityConverter}}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
             </ScrollViewer>
-        </Border>
+        </NavigationView>
+        
+        <TextBlock Text="{Binding ConnectionStatus}" 
+                   FontSize="14" 
+                   VerticalAlignment="Top"
+                   HorizontalAlignment="Left"
+                   Margin="50,10,0,0"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
     </Grid>
 </Page>
