@@ -316,6 +316,7 @@ namespace FufuLauncher.ViewModels
             IsVideoBackground = false;
 
             _ = _localSettingsService.SaveSettingAsync("PreferVideoBackground", PreferVideoBackground);
+            WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
             _ = LoadBackgroundAsync();
         }
 

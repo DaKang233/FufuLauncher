@@ -511,6 +511,7 @@ namespace FufuLauncher.ViewModels
         {
             Debug.WriteLine($"SettingsViewModel: 保存服务器设置 {value}");
             _ = _localSettingsService.SaveSettingAsync(LocalSettingsService.BackgroundServerKey, (int)value);
+            WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
 
             if (IsBackgroundEnabled)
             {
@@ -522,6 +523,7 @@ namespace FufuLauncher.ViewModels
         {
             Debug.WriteLine($"SettingsViewModel: 保存背景开关 {value}");
             _ = _localSettingsService.SaveSettingAsync(LocalSettingsService.IsBackgroundEnabledKey, value);
+            WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
 
             if (!value)
             {
@@ -641,6 +643,7 @@ namespace FufuLauncher.ViewModels
                     HasCustomBackground = true;
                     await _localSettingsService.SaveSettingAsync<string>("CustomBackgroundPath", path);
 
+                    WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
                     await RefreshMainPageBackground();
                 }
             }
@@ -659,6 +662,7 @@ namespace FufuLauncher.ViewModels
                 HasCustomBackground = false;
 
                 _backgroundRenderer.ClearCustomBackground();
+                WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
                 await RefreshMainPageBackground();
             }
             catch (Exception ex)

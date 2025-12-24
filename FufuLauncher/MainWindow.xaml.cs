@@ -1,5 +1,6 @@
-﻿﻿using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Principal;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using FufuLauncher.Contracts.Services;
 using FufuLauncher.Helpers;
@@ -13,6 +14,10 @@ using Microsoft.UI.Xaml.Media.Animation;
 using Windows.UI.ViewManagement;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using FufuLauncher.ViewModels;
+using FufuLauncher.Services.Background;
+using Windows.Media.Playback;
+using FufuLauncher.Models;
+using FufuLauncher.Services;
 
 namespace FufuLauncher;
 
@@ -20,6 +25,27 @@ public sealed partial class MainWindow : WindowEx
 {
     private Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue;
     private UISettings settings;
+    private readonly IBackgroundRenderer _backgroundRenderer;
+    private readonly ILocalSettingsService _localSettingsService;
+    private MediaPlayer? _globalBackgroundPlayer;
+
+    private Task RunOnUIThreadAsync(Action action)
+    {
+        var tcs = new TaskCompletionSource();
+        dispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                action();
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+        return tcs.Task;
+    }
 
     public MainWindow()
     {
@@ -40,6 +66,8 @@ public sealed partial class MainWindow : WindowEx
         dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
         settings = new UISettings();
         settings.ColorValuesChanged += Settings_ColorValuesChanged;
+        _backgroundRenderer = App.GetService<IBackgroundRenderer>();
+        _localSettingsService = App.GetService<ILocalSettingsService>();
 
         SetInitialWindowSize();
 
@@ -70,6 +98,11 @@ public sealed partial class MainWindow : WindowEx
                 try { ShowNotification(m); }
                 catch (Exception ex) { Debug.WriteLine($"显示通知异常: {ex.Message}"); }
             });
+        });
+
+        WeakReferenceMessenger.Default.Register<BackgroundRefreshMessage>(this, (r, m) =>
+        {
+            dispatcherQueue.TryEnqueue(async () => { await LoadGlobalBackgroundAsync(); });
         });
 
         this.Activated += OnWindowActivated;
@@ -104,6 +137,103 @@ public sealed partial class MainWindow : WindowEx
             Debug.WriteLine($"加载背景设置失败: {ex.Message}");
             ApplyBackdrop(WindowBackdropType.Acrylic); // 出错默认用亚克力
         }
+    }
+    private async Task LoadGlobalBackgroundAsync()
+    {
+        try
+        {
+            var customPathObj = await _localSettingsService.ReadSettingAsync("CustomBackgroundPath");
+            var customPath = customPathObj?.ToString();
+            var hasCustom = !string.IsNullOrEmpty(customPath) && File.Exists(customPath);
+
+            if (hasCustom)
+            {
+                var customResult = await _backgroundRenderer.GetCustomBackgroundAsync(customPath);
+                await ApplyGlobalBackgroundAsync(customResult);
+                return;
+            }
+
+            var enabledJson = await _localSettingsService.ReadSettingAsync(LocalSettingsService.IsBackgroundEnabledKey);
+            bool isEnabled = enabledJson == null ? true : Convert.ToBoolean(enabledJson);
+            if (!isEnabled)
+            {
+                await ClearGlobalBackgroundAsync();
+                return;
+            }
+
+            var preferVideoSetting = await _localSettingsService.ReadSettingAsync("UserPreferVideoBackground");
+            bool preferVideo = preferVideoSetting != null && Convert.ToBoolean(preferVideoSetting);
+
+            var serverJson = await _localSettingsService.ReadSettingAsync(LocalSettingsService.BackgroundServerKey);
+            int serverValue = serverJson != null ? Convert.ToInt32(serverJson) : 0;
+            var server = (ServerType)serverValue;
+
+            var result = await _backgroundRenderer.GetBackgroundAsync(server, preferVideo);
+            await ApplyGlobalBackgroundAsync(result);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MainWindow] 加载全局背景失败: {ex.Message}");
+            await ClearGlobalBackgroundAsync();
+        }
+    }
+
+    private Task ApplyGlobalBackgroundAsync(BackgroundRenderResult? result)
+    {
+        return RunOnUIThreadAsync(() =>
+        {
+            if (result == null)
+            {
+                GlobalBackgroundImage.Source = null;
+                GlobalBackgroundImage.Visibility = Visibility.Collapsed;
+                GlobalBackgroundVideo.Source = null;
+                GlobalBackgroundVideo.Visibility = Visibility.Collapsed;
+                _globalBackgroundPlayer?.Pause();
+                _globalBackgroundPlayer = null;
+                return;
+            }
+
+            if (result.IsVideo)
+            {
+                GlobalBackgroundImage.Source = null;
+                GlobalBackgroundImage.Visibility = Visibility.Collapsed;
+
+                _globalBackgroundPlayer?.Pause();
+                _globalBackgroundPlayer = new MediaPlayer
+                {
+                    Source = result.VideoSource,
+                    IsMuted = true,
+                    IsLoopingEnabled = true,
+                    AutoPlay = true
+                };
+
+                GlobalBackgroundVideo.SetMediaPlayer(_globalBackgroundPlayer);
+                GlobalBackgroundVideo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _globalBackgroundPlayer?.Pause();
+                _globalBackgroundPlayer = null;
+                GlobalBackgroundVideo.Source = null;
+                GlobalBackgroundVideo.Visibility = Visibility.Collapsed;
+
+                GlobalBackgroundImage.Source = result.ImageSource;
+                GlobalBackgroundImage.Visibility = Visibility.Visible;
+            }
+        });
+    }
+
+    private Task ClearGlobalBackgroundAsync()
+    {
+        return RunOnUIThreadAsync(() =>
+        {
+            GlobalBackgroundImage.Source = null;
+            GlobalBackgroundImage.Visibility = Visibility.Collapsed;
+            GlobalBackgroundVideo.Source = null;
+            GlobalBackgroundVideo.Visibility = Visibility.Collapsed;
+            _globalBackgroundPlayer?.Pause();
+            _globalBackgroundPlayer = null;
+        });
     }
     private void ApplyBackdrop(WindowBackdropType type)
     {
@@ -233,6 +363,7 @@ public sealed partial class MainWindow : WindowEx
         try
         {
             await LoadAndApplyAcrylicSettingAsync();
+            await LoadGlobalBackgroundAsync();
             await CheckUserAgreementAsync();
         }
         catch (Exception ex)
