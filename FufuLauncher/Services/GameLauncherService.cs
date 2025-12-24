@@ -232,10 +232,10 @@ namespace FufuLauncher.Services
                     result.Success = true;
                     result.ErrorMessage = "";
                 }
-                else
-                {
-                    result.ErrorMessage = $"游戏启动失败\n\n{errorDetail}";
-                }
+                //else
+                //{
+                //    result.ErrorMessage = $"游戏启动失败\n\n{errorDetail}";
+                //}
 
                 result.DetailLog = logBuilder.ToString();
                 Debug.WriteLine(result.DetailLog);

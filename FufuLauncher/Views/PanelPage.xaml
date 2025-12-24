@@ -58,16 +58,21 @@
                         <Grid Grid.Row="1" x:Name="PageContentContainer">
                             <Grid x:Name="BasicSettingsPage" Visibility="Visible">
                                 <StackPanel Spacing="20">
-                                    <TextBlock Text="游戏控制面板" 
-                                               FontSize="24" 
-                                               FontWeight="Bold" 
-                                               Margin="40,0,0,10"/>
-                                    
-                                    <Button Content="启动独立控制面板" 
-                                            Click="LaunchControlPanelButton_Click"
-                                            HorizontalAlignment="Left"
-                                            Width="200"
-                                            Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="游戏控制面板" 
+                                                   FontSize="24" 
+                                                   FontWeight="Bold" 
+                                                   Margin="40,0,0,10"/>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,0,500,10">
+                                            <TextBlock Text="注入" VerticalAlignment="Center" FontSize="14"/>
+                                            <ToggleSwitch IsOn="{x:Bind MainViewModel.UseInjection, Mode=TwoWay}"
+                                                          />
+                                        </StackPanel>
+                                    </Grid>
                                     
                                     <Grid>
                                         <Grid.RowDefinitions>

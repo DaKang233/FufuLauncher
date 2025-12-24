@@ -239,14 +239,6 @@
                 </Button>
             </Grid>
 
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" 
-                        VerticalAlignment="Bottom" HorizontalAlignment="Right"
-                        Margin="0,0,32,88" Spacing="12">
-                <TextBlock Text="注入" FontSize="12" Opacity="0.7" VerticalAlignment="Center"/>
-                <ToggleSwitch Header="" IsOn="{x:Bind ViewModel.UseInjection, Mode=TwoWay}"
-                              IsEnabled="{x:Bind ViewModel.IsInjectionToggleEnabled, Mode=OneWay}"/>
-            </StackPanel>
-
             <Button Grid.Row="1" Grid.Column="1"
                     Command="{x:Bind ViewModel.OpenScreenshotFolderCommand}"
                     IsEnabled="{x:Bind ViewModel.IsLaunchButtonEnabled, Mode=OneWay}"

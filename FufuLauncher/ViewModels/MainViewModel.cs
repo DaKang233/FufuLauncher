@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Security.Principal;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -376,20 +377,6 @@ namespace FufuLauncher.ViewModels
             }
         }
 
-        public bool IsAdministrator
-        {
-            get
-            {
-                using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
-                {
-                    WindowsPrincipal principal = new WindowsPrincipal(identity);
-                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
-                }
-            }
-        }
-
-        public bool IsInjectionToggleEnabled => IsAdministrator;
-
         public void Cleanup()
         {
             _bannerTimer?.Stop();
@@ -469,7 +456,17 @@ namespace FufuLauncher.ViewModels
             }
             else
             {
-                LaunchButtonText = hasPath ? "点击启动游戏" : "请选择游戏路径";
+                if (hasPath)
+                {
+                    LaunchButtonText = (UseInjection && !IsRunningAsAdministrator())
+                        ? "以管理员重启"
+                        : "点击启动游戏";
+                }
+                else
+                {
+                    LaunchButtonText = "请选择游戏路径";
+                }
+
                 LaunchButtonIcon = "\uE768";
             }
 
@@ -488,6 +485,20 @@ namespace FufuLauncher.ViewModels
                 await TerminateGameAsync();
                 await Task.Delay(1200);
                 await ForceRefreshGameStateAsync();
+                return;
+            }
+
+            if (UseInjection && !IsRunningAsAdministrator())
+            {
+                IsLaunchButtonEnabled = false;
+                try
+                {
+                    await RelaunchAsAdministratorAsync();
+                }
+                finally
+                {
+                    IsLaunchButtonEnabled = true;
+                }
                 return;
             }
 
@@ -513,15 +524,7 @@ namespace FufuLauncher.ViewModels
                         if (IsGameRunning) break;
                     }
                 }
-                else
-                {
-                    _notificationService.Show("启动失败", result.ErrorMessage, NotificationType.Error, 0);
-                }
-            }
-            catch (Exception ex)
-            {
-                _notificationService.Show("启动错误", $"发生异常: {ex.Message}", NotificationType.Error, 0);
-            }
+            }   
             finally
             {
                 IsGameLaunching = false;
@@ -562,15 +565,6 @@ namespace FufuLauncher.ViewModels
         {
             _ = Task.Run(async () =>
             {
-                if (value && !IsAdministrator)
-                {
-                    await UpdateUI(() =>
-                    {
-                        UseInjection = false;
-                        ShowAdminRequiredDialog();
-                    });
-                    return;
-                }
 
                 await _gameLauncherService.SetUseInjectionAsync(value);
                 var actual = await _gameLauncherService.GetUseInjectionAsync();
@@ -578,21 +572,8 @@ namespace FufuLauncher.ViewModels
                 {
                     await UpdateUI(() => UseInjection = actual);
                 }
-            });
-        }
 
-        private async Task ShowAdminRequiredDialog()
-        {
-            await _dispatcherQueue.EnqueueAsync(async () =>
-            {
-                var dialog = new ContentDialog
-                {
-                    Title = "需要管理员权限",
-                    Content = "注入功能需要以管理员身份运行此程序。请右键点击启动器，选择\"以管理员身份运行\"。",
-                    CloseButtonText = "确定",
-                    XamlRoot = App.MainWindow.Content.XamlRoot
-                };
-                await dialog.ShowAsync();
+                await UpdateUI(() => UpdateLaunchButtonState());
             });
         }
 
@@ -731,6 +712,52 @@ namespace FufuLauncher.ViewModels
                 }
 
                 await Task.Delay(3000, token);
+            }
+        }
+
+        private static bool IsRunningAsAdministrator()
+        {
+            try
+            {
+                using var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task RelaunchAsAdministratorAsync()
+        {
+            try
+            {
+                var exePath = Process.GetCurrentProcess().MainModule?.FileName;
+                if (string.IsNullOrEmpty(exePath))
+                {
+                    _notificationService.Show("操作失败", "无法定位启动程序路径", NotificationType.Error, 0);
+                    return;
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = exePath,
+                    UseShellExecute = true,
+                    Verb = "runas",
+                    WorkingDirectory = System.IO.Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory
+                };
+
+                Process.Start(startInfo);
+                await UpdateUI(() => Application.Current.Exit());
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
+            {
+                _notificationService.Show("已取消", "未授予管理员权限", NotificationType.Warning, 0);
+            }
+            catch (Exception ex)
+            {
+                _notificationService.Show("操作失败", $"提权启动失败: {ex.Message}", NotificationType.Error, 0);
             }
         }
     }

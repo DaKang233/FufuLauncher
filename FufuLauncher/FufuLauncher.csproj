@@ -46,10 +46,6 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>Genshin.UnlockerIsland.API.dll</Link>
         </Content>
-        <Content Include="..\FufuLauncher\ControlPanel.exe">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <Link>ControlPanel.exe</Link>
-        </Content>
         <Content Include="..\FufuLauncher\Genshin.UnlockerIsland.API.dll.bak">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <Link>Genshin.UnlockerIsland.API.dll.bak</Link>
