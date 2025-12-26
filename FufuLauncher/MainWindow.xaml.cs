@@ -127,9 +127,49 @@ public sealed partial class MainWindow : WindowEx
         {
             _minimizeToTray = m.Value;
         });
-
+        WeakReferenceMessenger.Default.Register<BackgroundImageOpacityChangedMessage>(this, (r, m) =>
+        {
+            dispatcherQueue.TryEnqueue(() => ApplyBackgroundImageOpacity(m.Value));
+        });
+        
+        dispatcherQueue.TryEnqueue(async () => await LoadBackgroundImageOpacityAsync());
         Activated += OnWindowActivated;
+        
     }
+    private async Task LoadBackgroundImageOpacityAsync()
+    {
+        try
+        {
+            var valueObj = await _localSettingsService.ReadSettingAsync("GlobalBackgroundImageOpacity");
+            double opacity = 1.0;
+            if (valueObj != null && double.TryParse(valueObj.ToString(), out var parsed))
+            {
+                opacity = parsed;
+            }
+            ApplyBackgroundImageOpacity(opacity);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MainWindow] 加载背景图片透明度失败: {ex.Message}");
+            ApplyBackgroundImageOpacity(1.0);
+        }
+    }
+
+    private void ApplyBackgroundImageOpacity(double value)
+    {
+        var clamped = Math.Clamp(value, 0.0, 1.0);
+        
+        if (GlobalBackgroundImage != null)
+        {
+            GlobalBackgroundImage.Opacity = clamped;
+        }
+    
+        if (GlobalBackgroundVideo != null)
+        {
+            GlobalBackgroundVideo.Opacity = clamped;
+        }
+    }
+    
     
     private void ShowWindow()
     {

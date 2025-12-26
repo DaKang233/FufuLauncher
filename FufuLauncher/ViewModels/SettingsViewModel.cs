@@ -67,6 +67,7 @@ namespace FufuLauncher.ViewModels
         [ObservableProperty] private double _globalBackgroundOverlayOpacity = 0.3;
         [ObservableProperty] private double _contentFrameBackgroundOpacity = 0.5;
         [ObservableProperty] private bool _isSaveWindowSizeEnabled;
+        [ObservableProperty] private double _globalBackgroundImageOpacity = 1.0;
 
         public IAsyncRelayCommand OpenBackgroundCacheFolderCommand
         {
@@ -355,7 +356,30 @@ namespace FufuLauncher.ViewModels
             {
                 PanelBackgroundOpacity = 0.5;
             }
+            var bgImageOpacityJson = await _localSettingsService.ReadSettingAsync("GlobalBackgroundImageOpacity");
+            try
+            {
+                GlobalBackgroundImageOpacity = bgImageOpacityJson != null ? Convert.ToDouble(bgImageOpacityJson) : 1.0;
+            }
+            catch
+            {
+                GlobalBackgroundImageOpacity = 1.0;
+            }
+            
         }
+        partial void OnGlobalBackgroundImageOpacityChanged(double value)
+        {
+            var clamped = Math.Clamp(value, 0.0, 1.0);
+            if (Math.Abs(clamped - value) > 0.0001)
+            {
+                GlobalBackgroundImageOpacity = clamped;
+                return;
+            }
+            
+            _ = _localSettingsService.SaveSettingAsync("GlobalBackgroundImageOpacity", clamped);
+            WeakReferenceMessenger.Default.Send(new BackgroundImageOpacityChangedMessage(clamped));
+        }
+        
 
         partial void OnPanelBackgroundOpacityChanged(double value)
         {
