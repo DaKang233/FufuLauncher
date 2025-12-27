@@ -31,16 +31,6 @@
 * 注入功能需要以**管理员身份运行程序**
 * 自定义背景支持图片和视频文件，**动态视频背景不太稳定，图片正常**
 
-## 构建
-
-* 构建完成后将 `Install` 文件夹使用 `7z` 格式压缩
-* 下载 [FufuInstall](https://github.com/MarlonPullan6/FufuInstall) 将 `Install.7z` 替换
-* 使用 `Visual Studio 2026` 打开 `Install.slnx`
-* 项目配置:
-    * **PlatformToolset**：`v145`
-    * **C++ 标准**：`std:c++20`
-    * **MSVC 版本**：`v14.44`
-
 ## 说明
 
 * 请在使用项目前安装 **.NET 8.0** 或以上任意版本和 **Webview2** 运行时
