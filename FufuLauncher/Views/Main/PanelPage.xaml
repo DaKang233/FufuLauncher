@@ -195,17 +195,28 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <ToggleSwitch Grid.Column="0" Header="禁用大招动画" 
+    
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <ToggleSwitch Grid.Row="0" Grid.Column="0" Header="禁用大招动画" 
                                                           IsOn="{Binding DisableEventCameraMove, Mode=TwoWay}" 
                                                           ToolTipService.ToolTip="释放元素爆发时不再播放特写镜头，保持当前视角"/>
-              
-                                            <ToggleSwitch Grid.Column="1" Header="移除配队条" 
+    
+                                            <ToggleSwitch Grid.Row="0" Grid.Column="1" Header="移除配队条" 
                                                           IsOn="{Binding RemoveTeamProgressLimit, Mode=TwoWay}" 
                                                           ToolTipService.ToolTip="移除2秒配队界面的加载动画"/>
-              
-                                            <ToggleSwitch Grid.Column="2" Header="重定向合成入口" 
+    
+                                            <ToggleSwitch Grid.Row="0" Grid.Column="2" Header="重定向合成入口" 
                                                           IsOn="{Binding EnableRedirectCombineEntry, Mode=TwoWay}" 
                                                           ToolTipService.ToolTip="随时随地打开合成台"/>
+
+                                            <ToggleSwitch Grid.Row="1" Grid.Column="0" Header="禁用手柄热切换" 
+                                                          Margin="0,15,0,0"
+                                                          IsOn="{Binding DisableInputHotSwitch, Mode=TwoWay}" 
+                                                          ToolTipService.ToolTip="禁用input_hot_switch.dll的注入"/>
                                         </Grid>
                                     </Grid>
                                 </StackPanel>
