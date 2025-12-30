@@ -134,6 +134,43 @@ public partial class App : Application
             MainWindow.Activate();
         });
     }
+    
+    private void LaunchLocalUpdater()
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var updaterPath = Path.Combine(baseDir, "update", "update.exe");
+            
+            if (!File.Exists(updaterPath))
+            {
+                Debug.WriteLine($"[Updater] 未找到更新程序: {updaterPath}");
+                return;
+            }
+
+            Debug.WriteLine($"[Updater] 准备启动: {updaterPath}");
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = updaterPath,
+                Arguments = "1.0.4",
+                UseShellExecute = true,
+                Verb = "runas",
+                WorkingDirectory = Path.GetDirectoryName(updaterPath)
+            };
+
+            Process.Start(startInfo);
+            Debug.WriteLine("[Updater] 启动命令已发送");
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            Debug.WriteLine("[Updater] 用户取消了管理员授权或启动被拒绝。");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Updater] 启动异常: {ex.Message}");
+        }
+    }
 
     private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
     {
@@ -202,7 +239,9 @@ public partial class App : Application
             Debug.WriteLine("=== App 启动开始 ===");
 
             _mainDispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-
+            
+            _ = Task.Run(() => LaunchLocalUpdater());
+            
             await VerifyResourceFilesAsync();
             await ApplyLanguageSettingAsync();
 

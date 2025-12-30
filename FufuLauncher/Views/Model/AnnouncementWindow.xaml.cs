@@ -191,8 +191,7 @@ namespace FufuLauncher.Views
             {
                 var response = context.Response;
                 var requestPath = context.Request.Url.AbsolutePath.ToLower();
-
-                // CORS 头，允许 WebView 跨域访问
+                
                 response.AppendHeader("Access-Control-Allow-Origin", "*");
                 response.AppendHeader("Access-Control-Allow-Methods", "GET");
                 

@@ -152,8 +152,7 @@ public sealed partial class PanelPage
             await CheckFpsLimitAsync(e.NewValue, (val) => slider.Value = val);
         }
     }
-
-    // NumberBox 输入事件
+    
     private async void FpsNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
         await CheckFpsLimitAsync(args.NewValue, (val) => sender.Value = val);
