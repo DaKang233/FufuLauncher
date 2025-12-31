@@ -53,13 +53,15 @@
                         Loaded="NavigationView_Loaded"
                         OpenPaneLength="150"
                         CompactPaneLength="60"
-                        Background="Transparent">
+                        Background="{x:Null}">
 
             <NavigationView.Resources>
                 <Style TargetType="NavigationViewItem">
                     <Setter Property="MinHeight" Value="48"/>
                     <Setter Property="Margin" Value="0,1,0,1"/>
                 </Style>
+                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
+                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent"/>
             </NavigationView.Resources>
 
             <NavigationView.PaneHeader>

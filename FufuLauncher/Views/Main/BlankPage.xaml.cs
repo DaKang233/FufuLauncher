@@ -119,6 +119,44 @@ namespace FufuLauncher.Views
             newWindow.Activate();
         }
 
+        private async Task<bool> ValidateGameExecutableAsync(string path)
+        {
+            string cnExe = Path.Combine(path, "YuanShen.exe");
+            string globalExe = Path.Combine(path, "GenshinImpact.exe");
+            
+            if (File.Exists(cnExe))
+            {
+                return true;
+            }
+            else if (File.Exists(globalExe))
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "国际服客户端",
+                    Content = "注意：本启动器的注入功能主要是针对国服设计的。在国际服客户端上，此功能可能无法生效或导致未知的错误。\n\n是否继续使用此路径？",
+                    PrimaryButtonText = "继续使用",
+                    CloseButtonText = "放弃并清除",
+                    DefaultButton = ContentDialogButton.Primary,
+                    XamlRoot = this.XamlRoot
+                };
+
+                var result = await dialog.ShowAsync();
+                return result == ContentDialogResult.Primary;
+            }
+            else
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "无效的游戏路径",
+                    Content = "在该路径下未找到游戏主程序 (YuanShen.exe 或 GenshinImpact.exe)。\n\n请确认您选择的是包含游戏可执行文件的安装目录。",
+                    CloseButtonText = "确定",
+                    XamlRoot = this.XamlRoot
+                };
+                await dialog.ShowAsync();
+                return false;
+            }
+        }
+
         private async Task ProcessPathInput(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -131,11 +169,21 @@ namespace FufuLauncher.Views
             {
                 if (Directory.Exists(path))
                 {
-                    await LoadGameInfoAsync(path);
-                    await _localSettingsService.SaveSettingAsync("GameInstallationPath", path);
-                    WeakReferenceMessenger.Default.Send(new GamePathChangedMessage(path));
+                    bool isValid = await ValidateGameExecutableAsync(path);
 
-                    Debug.WriteLine($"[ApplyPath_Click] 手动输入路径成功: {path}");
+                    if (isValid)
+                    {
+                        await LoadGameInfoAsync(path);
+                        await _localSettingsService.SaveSettingAsync("GameInstallationPath", path);
+                        WeakReferenceMessenger.Default.Send(new GamePathChangedMessage(path));
+
+                        Debug.WriteLine($"[ProcessPathInput] 路径设置成功: {path}");
+                    }
+                    else
+                    {
+                        PathTextBox.Text = string.Empty;
+                        ShowEmptyState();
+                    }
                 }
                 else
                 {
@@ -147,10 +195,14 @@ namespace FufuLauncher.Views
                         XamlRoot = this.XamlRoot
                     };
                     await dialog.ShowAsync();
-
+                    
                     if (await _localSettingsService.ReadSettingAsync("GameInstallationPath") is string savedPath)
                     {
                         PathTextBox.Text = savedPath.Trim('"').Trim();
+                    }
+                    else
+                    {
+                        PathTextBox.Text = string.Empty;
                     }
                 }
             }
@@ -158,6 +210,9 @@ namespace FufuLauncher.Views
             {
                 Debug.WriteLine($"[ProcessPathInput] 处理失败: {ex.Message}");
                 await ShowError($"路径处理失败: {ex.Message}");
+                
+                PathTextBox.Text = string.Empty;
+                ShowEmptyState();
             }
         }
 
@@ -249,11 +304,8 @@ namespace FufuLauncher.Views
             {
                 var path = folder.Path;
                 PathTextBox.Text = path;
-
-                await _localSettingsService.SaveSettingAsync("GameInstallationPath", path);
-                WeakReferenceMessenger.Default.Send(new GamePathChangedMessage(path));
-
-                await LoadGameInfoAsync(path);
+                await ProcessPathInput(path);
+        
                 return path;
             }
             return null;

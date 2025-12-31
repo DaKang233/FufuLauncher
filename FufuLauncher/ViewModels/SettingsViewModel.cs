@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -380,6 +379,35 @@ namespace FufuLauncher.ViewModels
             WeakReferenceMessenger.Default.Send(new BackgroundImageOpacityChangedMessage(clamped));
         }
         
+        private async Task RequestRestartAsync(string title = "设置已更改")
+        {
+            try
+            {
+                App.MainWindow.DispatcherQueue.TryEnqueue(async () =>
+                {
+                    var dialog = new ContentDialog
+                    {
+                        Title = title,
+                        Content = "修改此设置需要重启应用才能生效。",
+                        PrimaryButtonText = "立即重启",
+                        CloseButtonText = "稍后",
+                        DefaultButton = ContentDialogButton.Primary,
+                        XamlRoot = App.MainWindow.Content.XamlRoot
+                    };
+
+                    var result = await dialog.ShowAsync();
+                    if (result == ContentDialogResult.Primary)
+                    {
+
+                        Microsoft.Windows.AppLifecycle.AppInstance.Restart(string.Empty);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"显示重启对话框失败: {ex.Message}");
+            }
+        }
 
         partial void OnPanelBackgroundOpacityChanged(double value)
         {
@@ -591,20 +619,22 @@ namespace FufuLauncher.ViewModels
         {
             Debug.WriteLine($"SettingsViewModel: 保存服务器设置 {value}");
             _ = _localSettingsService.SaveSettingAsync(LocalSettingsService.BackgroundServerKey, (int)value);
+            
             WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
-
             if (IsBackgroundEnabled)
             {
                 _ = RefreshMainPageBackground();
             }
+            
+            _ = RequestRestartAsync("背景服务器已更改");
         }
 
         partial void OnIsBackgroundEnabledChanged(bool value)
         {
             Debug.WriteLine($"SettingsViewModel: 保存背景开关 {value}");
             _ = _localSettingsService.SaveSettingAsync(LocalSettingsService.IsBackgroundEnabledKey, value);
+            
             WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
-
             if (!value)
             {
                 _backgroundRenderer.ClearBackground();
@@ -613,14 +643,19 @@ namespace FufuLauncher.ViewModels
             {
                 _ = RefreshMainPageBackground();
             }
+            
+            _ = RequestRestartAsync("背景开关已更改");
         }
 
         partial void OnIsGlobalBackgroundEnabledChanged(bool value)
         {
             Debug.WriteLine($"SettingsViewModel: 保存全局背景开关 {value}");
             _ = _localSettingsService.SaveSettingAsync("UseGlobalBackground", value);
+            
             WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
             _ = RefreshMainPageBackground();
+            
+            _ = RequestRestartAsync("全局背景设置已更改");
         }
         
         partial void OnIsShortTermSupportEnabledChanged(bool value)
@@ -766,6 +801,8 @@ namespace FufuLauncher.ViewModels
 
                     WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
                     await RefreshMainPageBackground();
+                    
+                    await RequestRestartAsync("自定义背景已应用");
                 }
             }
             catch (Exception ex)
@@ -785,6 +822,8 @@ namespace FufuLauncher.ViewModels
                 _backgroundRenderer.ClearCustomBackground();
                 WeakReferenceMessenger.Default.Send(new BackgroundRefreshMessage());
                 await RefreshMainPageBackground();
+                
+                await RequestRestartAsync("自定义背景已清除");
             }
             catch (Exception ex)
             {
