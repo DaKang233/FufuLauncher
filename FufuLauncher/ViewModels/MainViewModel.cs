@@ -11,7 +11,6 @@ using FufuLauncher.Services;
 using FufuLauncher.Services.Background;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Windows.Media.Playback;
 using Windows.UI;
@@ -85,6 +84,7 @@ namespace FufuLauncher.ViewModels
 
         [ObservableProperty] private bool _isGameRunning;
         [ObservableProperty] private string _launchButtonIcon = "\uE768";
+        [ObservableProperty] private bool _isBackgroundToggleEnabled = true;
 
         private const string TargetProcessName = "yuanshen";
         private const string TargetProcessNameAlt = "GenshinImpact";
@@ -200,6 +200,10 @@ namespace FufuLauncher.ViewModels
             _dispatcherQueue.TryEnqueue(UpdatePanelBackgroundBrush);
         }
         
+        partial void OnHasCustomBackgroundChanged(bool value)
+        {
+            IsBackgroundToggleEnabled = !value;
+        }
         
         private void UpdatePanelBackgroundBrush()
         {
