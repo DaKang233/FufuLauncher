@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Security.Principal;
 using CommunityToolkit.Mvvm.Messaging;
 using FufuLauncher.Contracts.Services;
@@ -32,27 +31,6 @@ public sealed partial class MainWindow : WindowEx
     private double _frameBackgroundOpacity = 0.5;
     private bool _minimizeToTray;
     private bool _isExit;
-    
-    [DllImport("advapi32.dll", SetLastError = true)]
-    private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GetCurrentProcess();
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    private static extern bool GetTokenInformation(IntPtr TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, IntPtr TokenInformation, uint TokenInformationLength, out uint ReturnLength);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool CloseHandle(IntPtr hObject);
-
-    private enum TOKEN_INFORMATION_CLASS { TokenElevationType = 18 }
-    
-    private enum TOKEN_ELEVATION_TYPE
-    {
-        TokenElevationTypeDefault = 1,
-        TokenElevationTypeFull = 2,
-        TokenElevationTypeLimited = 3
-    }
 
     public IRelayCommand ShowWindowCommand { get; }
     public IRelayCommand ExitApplicationCommand { get; }
@@ -157,83 +135,6 @@ public sealed partial class MainWindow : WindowEx
         dispatcherQueue.TryEnqueue(async () => await LoadBackgroundImageOpacityAsync());
         Activated += OnWindowActivated;
         
-        dispatcherQueue.TryEnqueue(() => 
-        {
-            CheckAndWarnUacElevation();
-        });
-
-        Activated += OnWindowActivated;
-        
-    }
-    
-    private async void CheckAndWarnUacElevation()
-    {
-        if (IsUacElevatedWithConsent())
-        {
-            if (this.Content is FrameworkElement rootElement)
-            {
-                if (rootElement.XamlRoot == null)
-                {
-                    var tcs = new TaskCompletionSource<bool>();
-                    void OnLoaded(object sender, RoutedEventArgs e)
-                    {
-                        rootElement.Loaded -= OnLoaded;
-                        tcs.TrySetResult(true);
-                    }
-                    rootElement.Loaded += OnLoaded;
-                    if (rootElement.XamlRoot == null) await tcs.Task;
-                }
-                
-                ContentDialog dialog = new ContentDialog();
-            
-                // 必须设置 XamlRoot
-                dialog.XamlRoot = rootElement.XamlRoot;
-            
-                dialog.Title = "权限警告";
-                dialog.Content = "程序正以管理员身份运行。\n这会导致无法使用文件选择器。\n建议直接正常启动程序，不要使用“以管理员身份运行”。";
-                dialog.CloseButtonText = "我知道了";
-                dialog.DefaultButton = ContentDialogButton.Close;
-
-                try
-                {
-                    await dialog.ShowAsync();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[MainWindow] 弹窗显示失败: {ex.Message}");
-                }
-            }
-        }
-    }
-
-    private bool IsUacElevatedWithConsent()
-    {
-        try
-        {
-            if (!IsRunningAsAdministrator()) return false;
-
-            IntPtr tokenHandle = IntPtr.Zero;
-            try
-            {
-                if (OpenProcessToken(GetCurrentProcess(), 0x0008, out tokenHandle))
-                {
-                    int size = Marshal.SizeOf(typeof(int));
-                    IntPtr ptr = Marshal.AllocHGlobal(size);
-                    try
-                    {
-                        if (GetTokenInformation(tokenHandle, TOKEN_INFORMATION_CLASS.TokenElevationType, ptr, (uint)size, out _))
-                        {
-                            var type = (TOKEN_ELEVATION_TYPE)Marshal.ReadInt32(ptr);
-                            return type == TOKEN_ELEVATION_TYPE.TokenElevationTypeFull;
-                        }
-                    }
-                    finally { Marshal.FreeHGlobal(ptr); }
-                }
-            }
-            finally { if (tokenHandle != IntPtr.Zero) CloseHandle(tokenHandle); }
-        }
-        catch { }
-        return false;
     }
     private async Task LoadBackgroundImageOpacityAsync()
     {
@@ -766,7 +667,6 @@ public sealed partial class MainWindow : WindowEx
             "FufuLauncher.ViewModels.OtherViewModel" => typeof(Views.OtherPage),
             "FufuLauncher.ViewModels.CalculatorViewModel" => typeof(Views.CalculatorPage),
             "FufuLauncher.ViewModels.ControlPanelModel" => typeof(Views.PanelPage),
-            "FufuLauncher.ViewModels.PluginViewModel" => typeof(Views.PluginPage),
             _ => null
         };
 
@@ -988,25 +888,14 @@ public sealed partial class MainWindow : WindowEx
 
     private void ApplyFrameBackgroundOpacity(double value)
     {
-        // 1. 限制输入范围
         _frameBackgroundOpacity = Math.Clamp(value, 0.0, 1.0);
 
-        // 2. 确保 ContentFrame 可用
-        if (ContentFrame == null) return;
-
-        // 3. 获取或创建 SolidColorBrush
-        SolidColorBrush brush;
-        if (ContentFrame.Background is SolidColorBrush existingBrush)
-        {
-            brush = existingBrush;
-        }
-        else
+        if (ContentFrame == null || ContentFrame.Background == null || ContentFrame.Background is not SolidColorBrush brush)
         {
             brush = new SolidColorBrush();
             ContentFrame.Background = brush;
         }
 
-        // 4. 根据当前主题确定基色 (黑或白)
         var theme = ElementTheme.Default;
         if (Content is FrameworkElement root)
         {
@@ -1018,12 +907,7 @@ public sealed partial class MainWindow : WindowEx
         }
 
         var baseColor = theme == ElementTheme.Dark ? Colors.Black : Colors.White;
-
-        // 5. 【关键修改】直接映射 0.0-1.0 到 0-255
-        // 这样当 _frameBackgroundOpacity 为 0 时，A 也为 0 (完全透明)
-        baseColor.A = (byte)(_frameBackgroundOpacity * 255);
-
-        // 6. 应用颜色
+        baseColor.A = (byte)Math.Clamp((int)Math.Round(_frameBackgroundOpacity * 255), 0, 255);
         brush.Color = baseColor;
     }
 }

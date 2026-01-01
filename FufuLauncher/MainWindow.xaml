@@ -53,15 +53,13 @@
                         Loaded="NavigationView_Loaded"
                         OpenPaneLength="150"
                         CompactPaneLength="60"
-                        Background="{x:Null}">
+                        Background="Transparent">
 
             <NavigationView.Resources>
                 <Style TargetType="NavigationViewItem">
                     <Setter Property="MinHeight" Value="48"/>
                     <Setter Property="Margin" Value="0,1,0,1"/>
                 </Style>
-                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
-                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent"/>
             </NavigationView.Resources>
 
             <NavigationView.PaneHeader>
@@ -101,11 +99,6 @@
                 <NavigationViewItem Content="养成计算" Tag="FufuLauncher.ViewModels.CalculatorViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE835;" FontFamily="Segoe MDL2 Assets" FontSize="28"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="插件管理" Tag="FufuLauncher.ViewModels.PluginViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE7B5;" FontFamily="Segoe MDL2 Assets" FontSize="28"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
